@@ -5,10 +5,11 @@
 # 20231001
 ###########################################################################
 __title__ = "markdown2html"
-__version__ = 0.01
+__version__ = 0.02
 
 
 # import libraries
+import datetime
 import markdown
 
 
@@ -39,7 +40,14 @@ class Markdown(object):
         return html
 
     def wrap_html_with_div(self, html):
-        return f'<section id="main_content" class="inner">\n{html}\n</section>'
+        wrapping = """
+        <section id="main_content" class="inner">
+            <h6>{0}</h6>
+            {1}
+        </section>
+        """
+        return wrapping.format(datetime.datetime.now().strftime("%Y.%m.%d %H:%M:%S"),
+                               html)
 
 
 # main loop
