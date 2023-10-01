@@ -5,7 +5,7 @@
 # 20231001
 ###########################################################################
 __title__ = "markdown2html"
-__version__ = 0.02
+__version__ = 0.03
 
 
 # import libraries
@@ -25,6 +25,7 @@ class Markdown(object):
     """
     def __init__(self, markdown_file):
         self.markdown = self.read_markdown(markdown_file)
+        self.split_markdown = self.split_md_contents()
 
     def read_markdown(self, markdown_file):
         with open(markdown_file, "r") as f:
@@ -35,17 +36,46 @@ class Markdown(object):
         with open(output_file, "w+") as f:
             f.write(self.wrap_html_with_div(self.convert_md_html()))
 
+    def split_md_contents(self):
+        positions = []
+        parts = []
+        position = -1  # start position
+        # start marker
+        while True:
+            position = self.markdown.find("\n\n|", position + 1)  # find next occurrence
+            if position == -1:  # if no more occurrences found, break
+                break
+            positions.append(position + 2)
+            # position += 2
+        # end marker
+        while True:
+            position = self.markdown.find("|\n\n", position + 1)  # find next occurrence
+            if position == -1:  # if no more occurrences found, break
+                break
+            positions.append(position + 1)
+            # position += 1
+        # split them
+        from_position = 0
+        positions.sort()
+        for marker in positions:
+            parts.append(self.markdown[from_position: marker])
+            from_position =  marker
+        parts.append(self.markdown[marker:])
+        return parts
+        # return positions
+
     def convert_md_html(self):
-        html = markdown.markdown(self.markdown)
-        return html
+        html_final = ""
+        for part in self.split_markdown:
+            if part[0] == "|":
+                html = markdown.markdown(part, extensions=['tables'])
+            else:
+                html = markdown.markdown(part)
+            html_final += html
+        return html_final
 
     def wrap_html_with_div(self, html):
-        wrapping = """
-        <section id="main_content" class="inner">
-            <h6>{0}</h6>
-            {1}
-        </section>
-        """
+        wrapping = """<section id="main_content" class="inner">\n<h6>{0}</h6>\n{1}\n</section>\n"""
         return wrapping.format(datetime.datetime.now().strftime("%Y.%m.%d %H:%M:%S"),
                                html)
 
